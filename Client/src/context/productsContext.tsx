@@ -1,69 +1,92 @@
-// ProductContext.tsx
-
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import { useEthereum } from "./EthereumContext";
 import { ethers } from "ethers";
-import { useEthereum } from "./EthereumContext"; 
 
 interface Product {
-  id: string;
-  name: string;
-  price: number;
-  description: string;
-  category: string;
-  image: string;
-  ratings: number;
-  stocks: number;
+  id: string |null;
+  name: string |null;
+  price: number |null|string;
+  description: string |null;
+  category: string |null;
+  image: string |null;
+  ratings: number |null;
+  stocks:number |null,
 }
 
-interface ProductContextType {
+interface productContextType {
   allItems: Product[] | null;
-  getAllProducts: () => Promise<void>;
+  getSingleItem:(id:string)=>Promise <Product | null>
 }
 
-const ProductContext = createContext<ProductContextType | undefined>(undefined);
+interface productContextProviderProps{
+children:ReactNode,
+}
 
-export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const [allItems, setAllItems] = useState<Product[] | null>(null);
-  const { contract } = useEthereum(); // Access contract from Ethereum context
+const productContext = createContext<productContextType | undefined>(undefined);
 
-  const getAllProducts = async () => {
-    if (contract) {
-      try {
-        const rawResult = await contract.getAllProducts();
-        const parsedResult = rawResult.map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          price: Number(ethers.formatEther(item.price.toString())) / 2500,
-          description: item.description,
-          category: item.category,
-          image: item.image,
-          ratings: Number(item.ratings),
-          stocks: Number(item.stocks),
-        }));
-        setAllItems(parsedResult);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      }
+export const ProductContextProvider = ({ children }: productContextProviderProps) => {
+    const [allItems, setAllItems] = useState<Product[] | null>(null);
+
+    const { contract } = useEthereum();
+
+    const getAllProducts = async () => {
+        const rawResults:any = await contract?.getAllProducts();
+
+        const parsedResults: Product[] = await rawResults.map(
+          (curval: Product) => ({
+            id: curval.id,
+            name: curval.name,
+            price:
+              curval.price != null
+                ? parseFloat(ethers.formatEther(curval.price.toString())) *
+                  400000000000000.0
+                : "",
+            description: curval.description,
+            category: curval.category,
+            image: curval.image,
+            ratings: Number(curval.ratings),
+            stocks: Number(curval.stocks),
+          })
+        );
+        setAllItems(parsedResults);
     }
-  };
+  
+  const getSingleItem = async(id:string) => {
+    const getItem: any = await contract?.allItems(id);
+    const parsedItem: Product = {
+      id: getItem.id,
+      name: getItem.name,
+      price:
+        getItem.price != null && getItem.price!=String
+          ? parseFloat(ethers.formatEther(getItem.price.toString())) *
+            400000000000000.0
+          : "",
+      description: getItem.description,
+      category: getItem.category,
+      image: getItem.image,
+      ratings: Number(getItem.ratings),
+      stocks: Number(getItem.stocks),
+    };
+ 
+    return parsedItem;
+    
+    }
 
-  useEffect(() => {
-    getAllProducts(); // Fetch products on mount
-  }, [contract]);
+    useEffect(() => {
+      if (contract) {
+        getAllProducts();
+      }
+    },[contract])
+    
+    return (<>
+        <productContext.Provider value={{allItems , getSingleItem}}>
+            {children}
+    </productContext.Provider>
+    </>)
+}
 
-  return (
-    <ProductContext.Provider value={{ allItems, getAllProducts }}>
-      {children}
-    </ProductContext.Provider>
-  );
-};
-
-export const useProducts = () => {
-  const context = useContext(ProductContext);
-  if (!context) {
-    throw new Error("useProducts must be used within a ProductProvider");
-  }
-  return context;
-};
+export const useProduct = () => {
+    const context: any = useContext(productContext);
+    if (!context) throw new Error("plz wrap children on productContextProvider");
+    return context;
+}

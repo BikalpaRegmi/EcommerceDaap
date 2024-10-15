@@ -1,13 +1,7 @@
-import { ethers } from "ethers"
 import React, { useState } from "react";
+import { useEthereum } from "../context/EthereumContext";
 
-interface addProductProps {
-    state: {
-        provider: ethers.BrowserProvider |null,
-        signer: ethers.Signer |null,
-        contract:ethers.Contract |null,
-    }
-}
+
 
 interface addDetail {
     id: string |null, 
@@ -20,7 +14,7 @@ interface addDetail {
     stocks:number |null,
 }
 
-const AddProducts: React.FC<addProductProps> = ({ state }) => {
+const AddProducts = () => {
     const [details, setDetails] = useState<addDetail>({
       id: Date.now().toString(),
       name: null,
@@ -32,7 +26,7 @@ const AddProducts: React.FC<addProductProps> = ({ state }) => {
       stocks:null,
     });
 
-    const { contract } = state;
+    const { contract } = useEthereum();
 
     const handleChange = (e:React.ChangeEvent<HTMLInputElement | HTMLSelectElement> ) => {
         setDetails((prev) => ({
@@ -41,40 +35,44 @@ const AddProducts: React.FC<addProductProps> = ({ state }) => {
     }
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
+      e.preventDefault();
+      if (contract) {
+        
         const productDetails = {
           id: details.id,
           name: details.name,
-          price:
-            details.price !== null
-              ? ethers.parseEther(details.price.toString())
-              : 0, // Add a fallback value
+          price: details.price ,
           description: details.description,
           category: details.category,
           image: details.image,
           ratings: details.ratings,
           stocks: details.stocks,
-        };
-      try {
-         const transaction = await contract?.listProducts(
-           productDetails.id,
-           productDetails.name,
-           productDetails.price,
-           productDetails.description,
-           productDetails.category,
-           productDetails.image,
-           productDetails.ratings,
-           productDetails.stocks
-         );
-        await transaction.wait();
-        alert('Added product  sucessfully');
-        console.log(details);
-               
 
-      } catch (error) {
-        console.log(error)
+        };
+        try {
+          
+          
+          const transaction = await contract?.listProducts(
+            productDetails.id,
+            productDetails.name,
+            productDetails.price,
+            productDetails.description,
+            productDetails.category,
+            productDetails.image,
+            productDetails.ratings,
+            productDetails.stocks,
+            
+           
+          );
+          await transaction.wait();
+          alert('Added product  sucessfully');
+          window.location.href = '/';
+          
+        } catch (error) {
+          console.log(error)
+        }
+        
       }
-       
     }
 
     
@@ -101,7 +99,7 @@ const AddProducts: React.FC<addProductProps> = ({ state }) => {
         </p>
 
         <p className="flex justify-between mb-2">
-          <label>Price:</label>
+          <label>Price on usd:</label>
           <input
             type="number"
             name="price"
@@ -166,11 +164,12 @@ const AddProducts: React.FC<addProductProps> = ({ state }) => {
         </p>
         <button
           type="submit"
-          className="bg-lime-700 text-white text-xl mt-5 w-48 ml-[49%] hover:bg-purple-800"
+          className="bg-lime-700 text-white text-xl mt-5 w-48 ml-[49%] hover:bg-blue-300"
         >
           Submit
         </button>
       </form>
+      <h1 className="capitalize text-center text-5xl mt-12 font-bold ">this can only be accessed if you are owner !</h1>
     </div>
   );
 }

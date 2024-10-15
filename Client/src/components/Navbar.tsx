@@ -1,42 +1,35 @@
-import { ethers } from 'ethers'
-import React, { useEffect, useState } from 'react'
+import  { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom';
+import { useEthereum } from '../context/EthereumContext';
 
-interface navProps {
-    state: {
-        provider: ethers.BrowserProvider | null, 
-        signer: ethers.Signer|null,
-        contract:ethers.Contract|null,
-    },
-    account: string |null,
-}
 
-const Navbar: React.FC<navProps> = ({ state , account }) => {
+
+const Navbar= () => {
     const [title, setTitle] = useState<string>("");
     const [owner, setOwner] = useState<string>('');
-    const { contract } = state;
+    const { contract , account } = useEthereum();
 
     const getDetails = async () => {
         const name:string = await contract?.name();
         setTitle(name);
         const owner:string = await contract?.owner();
-        setOwner(owner.toLowerCase());
-        console.log("owner:" , owner)
+      setOwner(owner.toLowerCase());
+      
 
     }
     
     
 
-    useEffect(() => {
-        getDetails();
-        
+  useEffect(() => {
+    if(contract)
+        getDetails(); 
     },[contract])
 
   return (
     <div>
       <div className="bg-green-900 flex justify-around p-2">
-        <h1 className="title text-white font-bold text-2xl shadow-2xl">
-          {title}
+        <h1 className="title  text-white font-bold text-2xl shadow-2xl">
+          <Link to={"/"}>{title}</Link>
         </h1>
 
         <input

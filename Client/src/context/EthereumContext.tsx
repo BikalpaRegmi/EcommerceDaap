@@ -1,83 +1,70 @@
-
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { ethers } from "ethers";
-import abi from "../contract.json/abi.json"; 
+import abi from '../../../ignition/deployments/chain-31337/artifacts/abi.json';
 
 interface EthereumContextType {
-  signer: ethers.Signer | null;
-  provider: ethers.BrowserProvider | null;
-  contract: ethers.Contract | null;
-  account: string | null;
+  signer: ethers.Signer | null,
+  contract: ethers.Contract | null,
+  provider: ethers.BrowserProvider | null,
+  account: string | null,
+}
+
+interface EthereumContextProps {
+  children:ReactNode,
 }
 
 declare global {
   interface Window {
-    ethereum: any;
+    ethereum:any,
   }
 }
 
-const EthereumContext = createContext<EthereumContextType | undefined>(
-  undefined
-);
+const EthereumContext = createContext<EthereumContextType | undefined>(undefined);
 
-export const EthereumProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const EthereumContextProvider = ({ children }: EthereumContextProps) => {
   const [state, setState] = useState<EthereumContextType>({
-    provider: null,
     signer: null,
     contract: null,
-    account: "not connected",
+    provider: null,
+    account: null,
   });
-
-  const template = async () => {
-    const contractAddress: string =
-      "0x5FbDB2315678afecb367f032d93F642f64180aa3";
-    const contractAbi: any = abi.abi;
+   
+  const template = async() => {
+    const address: string = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+    const contractAbi:any = abi.abi;
 
     const ethereum = window.ethereum;
 
     if (ethereum) {
-      const account: string[] = await ethereum.request({
+      const account:string[] = await ethereum.request({
         method: "eth_requestAccounts",
       });
 
       window.ethereum.on("accountsChanged", () => {
         window.location.reload();
       });
+      
+      const provider:ethers.BrowserProvider = new ethers.BrowserProvider(ethereum);
+      const signer : ethers.Signer = await provider.getSigner();
+      const contract:ethers.Contract = new ethers.Contract(address, contractAbi, signer);
 
-      const provider: ethers.BrowserProvider = new ethers.BrowserProvider(
-        ethereum
-      );
-      const signer: ethers.Signer = await provider.getSigner();
-      const contract: ethers.Contract = new ethers.Contract(
-        contractAddress,
-        contractAbi,
-        signer
-      );
-
-      setState({ signer, provider, contract, account: account[0] });
-    } else {
-      console.log("Please install MetaMask extension");
-    }
-  };
+      setState({ signer:signer, contract:contract, provider:provider, account: account[0] });
+    }else console.log('plz install metamask extension')
+  }
 
   useEffect(() => {
     template();
   }, []);
 
-  return (
+  return (<>
     <EthereumContext.Provider value={state}>
-      {children}
-    </EthereumContext.Provider>
-  );
-};
+      { children }
+   </EthereumContext.Provider>
+  </>)
+}
 
-// Hook to use the Ethereum context
 export const useEthereum = () => {
   const context = useContext(EthereumContext);
-  if (!context) {
-    throw new Error("useEthereum must be used within an EthereumProvider");
-  }
+  if (!context) throw new Error("plz wrap children with EthereumContextProvider");
   return context;
-};
+}

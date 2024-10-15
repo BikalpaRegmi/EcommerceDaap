@@ -4,7 +4,7 @@ pragma solidity 0.8.27;
 contract Ecommerce {
 
     string public name ;
-    address public owner ;
+    address public owner  ;
 
     struct products {
         string id ;
