@@ -75,7 +75,14 @@ const AddProducts = () => {
         
       }
     }
-
+  const handleWithraw = async () => {
+    if (contract) {
+     const Transaction =  await contract?.withdraw();
+      await Transaction.wait();
+      alert('Withdraw sucessful');
+      window.location.reload();
+    }
+ }
     
 
   return (
@@ -170,6 +177,7 @@ const AddProducts = () => {
           Submit
         </button>
       </form>
+      <button className="bg-purple-700 text-white p-2 ml-[53%] mt-4 " onClick={handleWithraw}>WithDraw All Money</button>
       <h1 className="capitalize text-center text-5xl mt-12 font-bold ">this can only be accessed if you are owner !</h1>
     </div>
   );
