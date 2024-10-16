@@ -13,7 +13,11 @@ const MiniNav = () => {
       <Link to={"/Category/?category=Fashion and Design"}>
         Fashion and Design
       </Link>
+
       <Link to={"/Category/?category=Toys and Gaming"}>Toys and Gaming</Link>
+      
+      <Link to={'/History'}>Order History</Link>
+      
     </div>
   );
 }

@@ -32,15 +32,12 @@ export const ProductContextProvider = ({ children }: productContextProviderProps
     const getAllProducts = async () => {
         const rawResults:any = await contract?.getAllProducts();
 
-        const parsedResults: Product[] = await rawResults.map(
+        const parsedResults: Product[] = await rawResults.filter((items:any)=>items.stocks >0).map(
           (curval: Product) => ({
             id: curval.id,
             name: curval.name,
-            price:
-              curval.price != null
-                ? parseFloat(ethers.formatEther(curval.price.toString())) *
-                  400000000000000.0
-                : "",
+            price: curval.price !==null && 
+            parseFloat( ethers.formatEther( curval.price )),
             description: curval.description,
             category: curval.category,
             image: curval.image,
@@ -56,11 +53,9 @@ export const ProductContextProvider = ({ children }: productContextProviderProps
     const parsedItem: Product = {
       id: getItem.id,
       name: getItem.name,
-      price:
-        getItem.price != null && getItem.price!=String
-          ? parseFloat(ethers.formatEther(getItem.price.toString())) *
-            400000000000000.0
-          : "",
+      
+      price:  parseFloat(ethers.formatEther(getItem.price)),
+
       description: getItem.description,
       category: getItem.category,
       image: getItem.image,

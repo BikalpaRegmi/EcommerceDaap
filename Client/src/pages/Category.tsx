@@ -1,4 +1,4 @@
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useProduct } from "../context/productsContext";
 import MiniNav from "../components/MiniNav";
 import { FaLongArrowAltRight } from "react-icons/fa";
@@ -44,10 +44,11 @@ const Category = () => {
                     <FaStar className="mt-1 text-yellow-500" />
                   </p>
                 </span>
-
+                <Link to={`/SingleProduct/${curval.id}`}>
                 <p className="flex cursor-pointer hover:text-blue-900 underline border-black  w-32 ml-auto">
                   view details <FaLongArrowAltRight className="mt-1" />
                 </p>
+                </Link>
               </li>
             );
           })}

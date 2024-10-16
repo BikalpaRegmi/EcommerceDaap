@@ -1,12 +1,13 @@
-import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useEffect, useState } from "react";
 import { ethers } from "ethers";
-import abi from '../../../ignition/deployments/chain-31337/artifacts/abi.json';
+import abi from '../bytecode/abi.json';
 
 interface EthereumContextType {
   signer: ethers.Signer | null,
   contract: ethers.Contract | null,
   provider: ethers.BrowserProvider | null,
   account: string | null,
+  setState:Dispatch<SetStateAction<EthereumContextType>>,
 }
 
 interface EthereumContextProps {
@@ -27,10 +28,11 @@ export const EthereumContextProvider = ({ children }: EthereumContextProps) => {
     contract: null,
     provider: null,
     account: null,
+    setState : ()=>{},
   });
    
   const template = async() => {
-    const address: string = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+    const address: string = "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1";
     const contractAbi:any = abi.abi;
 
     const ethereum = window.ethereum;
@@ -46,9 +48,15 @@ export const EthereumContextProvider = ({ children }: EthereumContextProps) => {
       
       const provider:ethers.BrowserProvider = new ethers.BrowserProvider(ethereum);
       const signer : ethers.Signer = await provider.getSigner();
-      const contract:ethers.Contract = new ethers.Contract(address, contractAbi, signer);
+      const contract: ethers.Contract = new ethers.Contract(address, contractAbi, signer);
+      setState((prevState) => ({
+        ...prevState,
+        signer: signer,
+        contract: contract,
+        provider: provider,
+        account:account[0],
+      }))
 
-      setState({ signer:signer, contract:contract, provider:provider, account: account[0] });
     }else console.log('plz install metamask extension')
   }
 

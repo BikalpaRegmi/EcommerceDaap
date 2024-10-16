@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.8.27;
-//
+
 contract Ecommerce {
 
     string public name ;
@@ -71,7 +71,7 @@ contract Ecommerce {
             products memory product = allItems[_id] ;
 
             require(msg.value == product.price , "plz pay exact price") ;
-
+            
              order memory Order = order(block.timestamp , product) ;
              orderCount[msg.sender]++ ;
              Orders[msg.sender][orderCount[msg.sender]] = Order ;
@@ -96,8 +96,24 @@ contract Ecommerce {
           return allProducts ;
         }
 
-        function getProductCount() public view returns (uint) {
-    return productIds.length;
+
+     function getMyOrders() public view returns (order[] memory) {
+    uint count = orderCount[msg.sender]; 
+    order[] memory userOrders = new order[](count); 
+
+    for (uint i = 0; i < count; i++) {
+        userOrders[i] = Orders[msg.sender][i + 1]; 
+    }
+
+    return userOrders; 
 }
 
+
+function decreaseStock(string memory _id) external onlyOwner{
+
+  require(allItems[_id].stocks > 0 , "Stock must be greater than zero");
+
+  allItems[_id].stocks -= 1;
+
+} 
 }

@@ -3,16 +3,19 @@ import { useProduct } from "../context/productsContext"
 import { useEffect, useState } from "react";
 import { FaStar } from "react-icons/fa6";
 import { FaRegArrowAltCircleLeft } from "react-icons/fa";
+import { useEthereum } from "../context/EthereumContext";
+import { ethers } from "ethers";
 
 
 
 const SingleProduct = () => {
     const [item, setItem] = useState<any>({});
     const { getSingleItem } = useProduct();
-    const { id } = useParams();
+  const { id } = useParams();
+  const { contract } = useEthereum();
 
     useEffect(() => {
-        const fetchAItem =async () => {
+        const fetchAItem = async () => {
             
             if (id) {
                 const data = await getSingleItem(id);
@@ -20,7 +23,19 @@ const SingleProduct = () => {
             }
         }
         fetchAItem()
-    },[getSingleItem])
+    }, [getSingleItem]);
+  
+  const handleBuyProduct = async () => {
+    const productPrice = ethers.parseEther(`${item.price}`);
+    
+    const transaction = await contract?.buyProduct(item.id, { value: productPrice });
+
+    await transaction.wait();
+
+    console.log('transaction sucess')
+
+  }
+
   return (
     <div>
       <div className="bg-red-700 w-0" title="Go Back">
@@ -62,7 +77,7 @@ const SingleProduct = () => {
                 <span className="title-font font-medium text-2xl text-gray-900">
                   {item.price} Eth
                 </span>
-                <button className="flex ml-auto text-white bg-green-600 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded">
+                <button onClick={handleBuyProduct} className="flex ml-auto text-white bg-green-600 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded">
                   Buy Product
                 </button>
               </div>

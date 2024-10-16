@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useEthereum } from "../context/EthereumContext";
+import { ethers } from "ethers";
 
 
 
@@ -55,7 +56,7 @@ const AddProducts = () => {
           const transaction = await contract?.listProducts(
             productDetails.id,
             productDetails.name,
-            productDetails.price,
+           productDetails.price!==null && ethers.parseEther(productDetails.price.toString()),
             productDetails.description,
             productDetails.category,
             productDetails.image,
@@ -99,7 +100,7 @@ const AddProducts = () => {
         </p>
 
         <p className="flex justify-between mb-2">
-          <label>Price on usd:</label>
+          <label>Price on Eth:</label>
           <input
             type="number"
             name="price"

@@ -15,6 +15,7 @@ describe("Ecommerce", () => {
       "https://ipfs.io/ipfs/Qmc9od3MQPPCh1BKPHLJNmTuAxjqnFDjoVHNfoFoFdZ6Ar";
     let ratings: number = 4.0;
     let stocks: number = 3;
+
     let transaction: any;
    
     beforeEach(async() => {
@@ -83,10 +84,7 @@ describe("Ecommerce", () => {
               "Only owner can list the products"
             );
         })
-        it("should push the orderIds", async () => {
-            const productCount = await contract.getProductCount();
-            expect(productCount).to.eq(1);
-        })
+        
     })
 
     describe("Buying", () => {
@@ -198,5 +196,82 @@ describe("Ecommerce", () => {
        expect(product.stocks).to.eq(stocks);
      });
    });
+    
+    describe("Decreasing Stock", () => {
+        beforeEach(async () => {
+            transaction = await contract.listProducts(
+                Id,
+                name,
+                price,
+                description,
+                category,
+                image,
+                ratings,
+                stocks
+            );
+            await transaction.wait();
+        });
+
+        it("Should be only decreased by owner", async () => {
+            await expect(
+                contract.connect(addr1).decreaseStock(Id)
+            ).to.be.revertedWith("Only owner can list the products");
+        });
+
+        it("Should the stock be more than zero ", async () => {
+           
+            await contract.decreaseStock(Id);
+            await contract.decreaseStock(Id);
+            await contract.decreaseStock(Id);
+            
+            await expect(contract.decreaseStock(Id)).to.be.revertedWith(
+                "Stock must be greater than zero"
+            );
+        });
+
+        it("Should decrease the stock", async () => {
+            await contract.decreaseStock(Id);
+
+            const stockAfterReduce = await contract.allItems(Id);
+
+            expect(stockAfterReduce.stocks).to.eq(2);
+        })
+    });
+    
+    describe("Displaying myOrders", () => {
+        let myOrders : any;
+          beforeEach(async () => {
+            transaction = await contract.listProducts(
+              Id,
+              name,
+              price,
+              description,
+              category,
+              image,
+              ratings,
+              stocks
+            );
+              await transaction.wait();
+              
+               await contract.buyProduct(Id , {value:price});
+              
+              myOrders = await contract.getMyOrders();
+          });
+        
+        it("should provide what have we purchased", async () => {
+                  const order = myOrders[0];
+
+                  expect(order.timestamp).to.be.greaterThan(0);
+                  expect(order.item.id).to.eq(Id);
+                  expect(order.item.name).to.eq(name);
+                  expect(order.item.price).to.eq(price);
+                  expect(order.item.description).to.eq(description);
+                  expect(order.item.category).to.eq(category);
+                  expect(order.item.image).to.eq(image);
+                  expect(order.item.ratings).to.eq(ratings);
+                  expect(order.item.stocks).to.eq(stocks);
+
+        })
+    })
 
 })
